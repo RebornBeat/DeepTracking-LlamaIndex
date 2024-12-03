@@ -1,10 +1,18 @@
+mod analyzers;
+mod errors;
+mod manager;
+mod report;
+
+pub use analyzers::{CodeAnalyzer, Dependency, DependencyMetadata, DependencyType};
+pub use errors::TrackerError;
+pub use manager::AnalyzerManager;
+pub use report::{CombinedReport, ReportGenerator};
+
 use crate::graph::DependencyGraph;
 use std::path::PathBuf;
 
-pub mod analyzers;
-
 pub struct CodeTracker {
-    root_path: PathBuf,
+    pub(crate) root_path: PathBuf,
     analyzers: Vec<Box<dyn analyzers::CodeAnalyzer>>,
     graph: DependencyGraph,
 }
