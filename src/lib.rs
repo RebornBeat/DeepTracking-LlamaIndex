@@ -2,6 +2,7 @@ use pyo3::prelude::*;
 
 mod analysis;
 mod bridge;
+pub mod cli;
 mod graph;
 
 #[pymodule]
