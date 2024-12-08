@@ -1,8 +1,11 @@
 # Target directory
 /target/
 
-# Dependency lock file
+#Dependency lock file
 Cargo.lock
+
+# Virtual Environment
+/.env/
 
 !src/
 !src/**/*.rs

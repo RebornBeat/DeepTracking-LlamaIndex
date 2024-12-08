@@ -1,6 +1,8 @@
+use crate::analyzers::{Dependency, DependencyMetadata, DependencyType};
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::{HashMap, HashSet};
+use serde_json::{json, Value};
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Node {
@@ -17,7 +19,7 @@ pub enum NodeType {
     Type,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub struct Edge {
     pub source: PathBuf,
     pub target: PathBuf,
@@ -25,10 +27,10 @@ pub struct Edge {
     pub metadata: DependencyMetadata,
 }
 
+#[derive(Debug)]
 pub struct DependencyGraph {
     nodes: HashMap<PathBuf, Node>,
     edges: Vec<Edge>,
-    // Index for quick lookups
     node_index: HashMap<String, HashSet<PathBuf>>,
     edge_index: HashMap<PathBuf, HashSet<Edge>>,
 }
@@ -41,6 +43,31 @@ impl DependencyGraph {
             node_index: HashMap::new(),
             edge_index: HashMap::new(),
         }
+    }
+
+    pub fn add_node(&mut self, path: &PathBuf, node_type: NodeType) -> Result<(), String> {
+        let node = Node {
+            path: path.clone(),
+            metadata: HashMap::new(),
+            node_type,
+        };
+
+        self.nodes.insert(path.clone(), node);
+        self.node_index
+            .entry(path.to_string_lossy().into_owned())
+            .or_insert_with(HashSet::new)
+            .insert(path.clone());
+
+        Ok(())
+    }
+
+    pub fn add_edge(&mut self, edge: Edge) -> Result<(), String> {
+        self.edges.push(edge.clone());
+        self.edge_index
+            .entry(edge.source.clone())
+            .or_insert_with(HashSet::new)
+            .insert(edge);
+        Ok(())
     }
 
     pub fn add_dependencies(&mut self, deps: Vec<Dependency>) -> Result<(), String> {
@@ -138,7 +165,7 @@ impl DependencyGraph {
         Ok(metadata)
     }
 
-    fn get_direct_relationships(
+    pub fn get_direct_relationships(
         &self,
         file: &PathBuf,
     ) -> Result<HashMap<String, Vec<String>>, String> {
@@ -264,7 +291,7 @@ impl DependencyGraph {
         let mut path = Vec::new();
         let mut visited = HashSet::new();
         let mut queue = VecDeque::new();
-        let mut parent_map = HashMap::new();
+        let mut parent_map: HashMap<PathBuf, PathBuf> = HashMap::new();
 
         queue.push_back(start.clone());
         visited.insert(start.clone());

@@ -1,3 +1,6 @@
+use crate::analyzers::{CodeAnalyzer, Dependency, DependencyMetadata, DependencyType};
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -25,7 +28,7 @@ struct FunctionInfo {
     block_end: Option<usize>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 struct ParameterInfo {
     name: String,
     param_type: Option<String>,

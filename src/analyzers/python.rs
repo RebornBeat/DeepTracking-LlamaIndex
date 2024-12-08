@@ -1,9 +1,11 @@
 use super::{CodeAnalyzer, Dependency, DependencyMetadata, DependencyType};
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde_json::json;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+#[derive(Debug)]
 pub struct PythonAnalyzer {
     class_pattern: Regex,
     function_pattern: Regex,
@@ -48,12 +50,17 @@ impl PythonAnalyzer {
                         metadata: DependencyMetadata {
                             line_number: Some(line_num),
                             description: Some(format!("Import: {}", import)),
+                            context: Some(json!({
+                                "import_type": "direct",
+                                "module_path": import,
+                                "is_from_import": false
+                            })),
+                            relationships: Some(vec![format!("Imports module {}", import)]),
                         },
                     });
                 }
             }
 
-            // Handle from ... import ...
             if let Some(cap) = self.from_import_pattern.captures(line) {
                 let module = &cap[1];
                 let imports = cap[2].split(',').map(str::trim);
@@ -65,6 +72,16 @@ impl PythonAnalyzer {
                         metadata: DependencyMetadata {
                             line_number: Some(line_num),
                             description: Some(format!("From {} import {}", module, import)),
+                            context: Some(json!({
+                                "import_type": "from",
+                                "base_module": module,
+                                "imported_name": import,
+                                "is_from_import": true
+                            })),
+                            relationships: Some(vec![format!(
+                                "Imports {} from module {}",
+                                import, module
+                            )]),
                         },
                     });
                 }
@@ -102,6 +119,12 @@ impl PythonAnalyzer {
                     metadata: DependencyMetadata {
                         line_number: Some(line_num),
                         description: Some(format!("Class definition: {}", class_name)),
+                        context: Some(json!({
+                            "type": "class",
+                            "name": class_name,
+                            "indent_level": indent_level
+                        })),
+                        relationships: Some(vec![format!("Defines class {}", class_name)]),
                     },
                 });
             }
@@ -122,6 +145,18 @@ impl PythonAnalyzer {
                     metadata: DependencyMetadata {
                         line_number: Some(line_num),
                         description: Some(format!("Function definition: {}", qualified_name)),
+                        context: Some(json!({
+                            "type": "function",
+                            "name": func_name,
+                            "class_context": current_class,
+                            "qualified_name": qualified_name,
+                            "indent_level": spaces
+                        })),
+                        relationships: Some(vec![if let Some(ref class_name) = current_class {
+                            format!("Method of class {}", class_name)
+                        } else {
+                            format!("Defines function {}", qualified_name)
+                        }]),
                     },
                 });
             }
