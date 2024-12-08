@@ -712,9 +712,10 @@ Cross-Modal Studies and Embedding Alignment
     Jia, C., et al. ALIGN: Scaling Up Vision-Language Representations With Noisy Text. ICML, 2021: For methods to align embedding spaces across modalities.
     Arandjelović, R., et al. NetVLAD: CNN Architecture for Weakly Supervised Place Recognition. CVPR, 2016: For insights into embedding transformations.
 
-Implementation Notes
+## Implementation Notes
 
 This project’s methodologies have been fully implemented from scratch in Rust, relying on the theoretical foundations detailed above. The reimagination and development of algorithms such as PCA, t-SNE, clustering, and Monte Carlo methods highlight the originality and technical rigor of this work.
-Ethical and Inspirational Acknowledgments
+
+## Ethical and Inspirational Acknowledgments
 
 This project was greatly inspired by the open-source community, whose contributions continue to foster innovation and collaboration. Special acknowledgment is extended to Sentdex, whose approachable and educational content encouraged deeper exploration into machine learning concepts. Additionally, the use of Large Language Models (LLMs) streamlined workflows and expanded the scope of this research.
